@@ -1,0 +1,69 @@
+// prisma/schema.prisma
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Design {
+  id        String    @id @default(cuid())
+  prompt    String
+  tags      String    @default("")
+  status    String    @default("draft") // draft|rendered|mocked|published
+  assets    Asset[]
+  products  Product[]
+  createdAt DateTime  @default(now())
+}
+
+model Asset {
+  id        String   @id @default(cuid())
+  designId  String
+  design    Design   @relation(fields: [designId], references: [id], onDelete: Cascade)
+  kind      String   // source|print|mockup
+  url       String
+  width     Int
+  height    Int
+  dpi       Int?
+  createdAt DateTime @default(now())
+}
+
+model Product {
+  id          String    @id @default(cuid())
+  designId    String
+  design      Design    @relation(fields: [designId], references: [id], onDelete: Cascade)
+  slug        String    @unique
+  title       String
+  description String
+  printifyId  String?   // product id on Printify
+  optionsJson String    // sizes/finishes JSON
+  listings    Listing[]
+  createdAt   DateTime  @default(now())
+}
+
+model Listing {
+  id         String   @id @default(cuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  channel    String   // site|etsy|amazon
+  externalId String?  // Etsy listing id, Amazon ASIN/Feed id
+  status     String   @default("pending")
+  priceCents Int
+  seoTitle   String
+  keywords   String   @default("")
+  sales      Sale[]
+  createdAt  DateTime @default(now())
+}
+
+model Sale {
+  id         String   @id @default(cuid())
+  listingId  String
+  listing    Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  channel    String   // site|etsy|amazon
+  qty        Int
+  totalCents Int
+  utmSource  String?  // tracking for your site
+  createdAt  DateTime @default(now())
+}

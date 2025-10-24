@@ -164,10 +164,10 @@ import { z } from "zod";
 
 export const UploadSticker = z.object({
   title: z.string().min(2),
-  description: z.string().min(10),
-  tags: z.array(z.string()).max(10),
+  description: z.string(),
+  tags: z.array(z.string()),
   fileName: z.string(),          // uploaded PNG name
-  sizeInches: z.enum(["2","3","4"]),
+  sizeInches: z.enum(["2","3","4","5"]),
   finish: z.enum(["glossy","matte"]),
 });
 

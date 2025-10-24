@@ -1,6 +1,9 @@
 import Link from "next/link";
+import { isAuthenticated } from "@/lib/auth";
 
-export default function Navbar() {
+export default async function Navbar() {
+  const isAdmin = await isAuthenticated();
+
   return (
     <div className="navbar bg-base-100 shadow-lg">
       <div className="flex-1">
@@ -13,9 +16,11 @@ export default function Navbar() {
           <li>
             <Link href="/">Shop</Link>
           </li>
-          <li>
-            <Link href="/admin">Admin</Link>
-          </li>
+          {isAdmin && (
+            <li>
+              <Link href="/admin">Admin</Link>
+            </li>
+          )}
         </ul>
       </div>
     </div>

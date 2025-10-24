@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/db";
-import Navbar from "@/components/Navbar";
 import ProductCard from "@/components/ProductCard";
 
 export default async function Home() {
@@ -15,10 +14,10 @@ export default async function Home() {
       design: {
         include: {
           assets: {
-            where: {
-              kind: "mockup",
-            },
-            take: 1,
+            orderBy: [
+              { kind: "asc" },
+              { createdAt: "asc" },
+            ],
           },
         },
       },
@@ -27,7 +26,6 @@ export default async function Home() {
 
   return (
     <main>
-      <Navbar />
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-4xl font-bold mb-8 text-center">
           Rave Sticker Collection
@@ -42,8 +40,11 @@ export default async function Home() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {products.map((product) => {
-              const mockupUrl =
-                product.design.assets[0]?.url || "/placeholder.png";
+              const assets = product.design.assets ?? [];
+              const mockupAsset = assets.find((asset) => asset.kind === "mockup");
+              const fallbackAsset = assets[0];
+              const imageUrl =
+                mockupAsset?.url || fallbackAsset?.url || "/placeholder.png";
               const priceCents = product.listings[0]?.priceCents || 0;
 
               return (
@@ -51,7 +52,7 @@ export default async function Home() {
                   key={product.id}
                   slug={product.slug}
                   title={product.title}
-                  imageUrl={mockupUrl}
+                  imageUrl={imageUrl}
                   priceCents={priceCents}
                 />
               );

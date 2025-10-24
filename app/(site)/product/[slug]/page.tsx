@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
-import Navbar from "@/components/Navbar";
 import Image from "next/image";
 
 type Props = {
@@ -30,8 +29,10 @@ export default async function ProductPage({ params }: Props) {
     notFound();
   }
 
-  const mockups = product.design.assets.filter((a) => a.kind === "mockup");
-  const primaryMockup = mockups[0] || product.design.assets[0];
+  const assets = product.design.assets ?? [];
+  const mockups = assets.filter((a) => a.kind === "mockup");
+  const galleryAssets = mockups.length > 0 ? mockups : assets;
+  const primaryAsset = galleryAssets[0];
   const listing = product.listings[0];
   const price = listing ? (listing.priceCents / 100).toFixed(2) : "0.00";
 
@@ -45,15 +46,14 @@ export default async function ProductPage({ params }: Props) {
 
   return (
     <main>
-      <Navbar />
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Product Images */}
           <div className="space-y-4">
-            {primaryMockup && (
+            {primaryAsset && (
               <div className="relative h-96 rounded-lg overflow-hidden">
                 <Image
-                  src={primaryMockup.url}
+                  src={primaryAsset.url}
                   alt={product.title}
                   fill
                   className="object-cover"
@@ -61,15 +61,15 @@ export default async function ProductPage({ params }: Props) {
                 />
               </div>
             )}
-            {mockups.length > 1 && (
+            {galleryAssets.length > 1 && (
               <div className="grid grid-cols-3 gap-2">
-                {mockups.slice(1, 4).map((mockup) => (
+                {galleryAssets.slice(1, 4).map((asset) => (
                   <div
-                    key={mockup.id}
+                    key={asset.id}
                     className="relative h-24 rounded overflow-hidden"
                   >
                     <Image
-                      src={mockup.url}
+                      src={asset.url}
                       alt={product.title}
                       fill
                       className="object-cover"

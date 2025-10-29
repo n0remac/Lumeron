@@ -2,14 +2,23 @@ import { prisma } from "@/lib/db";
 import ProductCard from "@/components/ProductCard";
 
 export default async function Home() {
-  // Fetch products with their first listing for pricing
+  // Fetch products with active site listings only
   const products = await prisma.product.findMany({
-    include: {
+    where: {
       listings: {
-        take: 1,
-        where: {
+        some: {
+          channel: "site",
           status: "active",
         },
+      },
+    },
+    include: {
+      listings: {
+        where: {
+          channel: "site",
+          status: "active",
+        },
+        take: 1,
       },
       design: {
         include: {
@@ -21,6 +30,9 @@ export default async function Home() {
           },
         },
       },
+    },
+    orderBy: {
+      createdAt: "desc",
     },
   });
 

@@ -3,6 +3,7 @@ import AdminTabs from "@/components/AdminTabs";
 import UploadForm from "@/components/UploadForm";
 import GenerateForm from "@/components/GenerateForm";
 import AnalyticsChart from "@/components/AnalyticsChart";
+import AdminOrdersTab from "@/components/AdminOrdersTab";
 
 async function ListingsContent() {
   const products = await prisma.product.findMany({
@@ -30,54 +31,46 @@ async function ListingsContent() {
             <th>Product</th>
             <th>Slug</th>
             <th>Status</th>
-            <th>Listings</th>
-            <th>Actions</th>
+            <th>Price</th>
           </tr>
         </thead>
         <tbody>
-          {products.map((product) => (
-            <tr key={product.id}>
-              <td>
-                <div className="flex items-center gap-3">
-                  {product.design.assets[0] && (
-                    <div className="avatar">
-                      <div className="mask mask-squircle h-12 w-12">
-                        <img src={product.design.assets[0].url} alt={product.title} />
+          {products.map((product) => {
+            const siteListing = product.listings.find((l) => l.channel === "site");
+            return (
+              <tr key={product.id}>
+                <td>
+                  <div className="flex items-center gap-3">
+                    {product.design.assets[0] && (
+                      <div className="avatar">
+                        <div className="mask mask-squircle h-12 w-12">
+                          <img src={product.design.assets[0].url} alt={product.title} />
+                        </div>
                       </div>
+                    )}
+                    <div>
+                      <div className="font-bold">{product.title}</div>
                     </div>
-                  )}
-                  <div>
-                    <div className="font-bold">{product.title}</div>
                   </div>
-                </div>
-              </td>
-              <td>{product.slug}</td>
-              <td>
-                <span className="badge badge-sm capitalize">
-                  {product.design.status}
-                </span>
-              </td>
-              <td>
-                <div className="flex gap-1">
-                  {product.listings.map((listing) => (
-                    <span key={listing.id} className="badge badge-sm capitalize">
-                      {listing.channel}
+                </td>
+                <td>{product.slug}</td>
+                <td>
+                  <span className={`badge badge-sm ${siteListing?.status === "active" ? "badge-success" : "badge-warning"}`}>
+                    {siteListing?.status || "unavailable"}
+                  </span>
+                </td>
+                <td>
+                  {siteListing ? (
+                    <span className="font-bold">
+                      ${(siteListing.priceCents / 100).toFixed(2)}
                     </span>
-                  ))}
-                </div>
-              </td>
-              <td>
-                <div className="flex gap-2">
-                  <button className="btn btn-xs btn-primary">
-                    Publish to Etsy
-                  </button>
-                  <button className="btn btn-xs btn-secondary">
-                    Publish to Amazon
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
+                  ) : (
+                    <span className="text-gray-500">-</span>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
 
@@ -100,6 +93,7 @@ export default async function AdminPage() {
           uploadContent={<UploadForm />}
           generateContent={<GenerateForm />}
           listingsContent={<ListingsContent />}
+          ordersContent={<AdminOrdersTab />}
           analyticsContent={<AnalyticsChart />}
         />
       </div>

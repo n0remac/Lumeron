@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { isAuthenticated } from "@/lib/auth";
+import CartButton from "./CartButton";
 
 export default async function Navbar() {
   const isAdmin = await isAuthenticated();
@@ -11,7 +12,7 @@ export default async function Navbar() {
           Lumeron
         </Link>
       </div>
-      <div className="flex-none">
+      <div className="flex-none gap-2">
         <ul className="menu menu-horizontal px-1">
           <li>
             <Link href="/">Shop</Link>
@@ -22,6 +23,7 @@ export default async function Navbar() {
             </li>
           )}
         </ul>
+        <CartButton />
       </div>
     </div>
   );

@@ -31,16 +31,18 @@ model Asset {
 }
 
 model Product {
-  id          String    @id @default(cuid())
-  designId    String
-  design      Design    @relation(fields: [designId], references: [id], onDelete: Cascade)
-  slug        String    @unique
-  title       String
-  description String
-  printifyId  String?   // product id on Printify
-  optionsJson String    // sizes/finishes JSON
-  listings    Listing[]
-  createdAt   DateTime  @default(now())
+  id           String      @id @default(cuid())
+  designId     String
+  design       Design      @relation(fields: [designId], references: [id], onDelete: Cascade)
+  slug         String      @unique
+  title        String
+  description  String
+  printifyId   String?     // product id on Printify
+  optionsJson  String      // sizes/finishes JSON
+  variantsJson String      @default("{}") // size/finish/price combinations for site sales
+  listings     Listing[]
+  orderItems   OrderItem[]
+  createdAt    DateTime    @default(now())
 }
 
 model Listing {
@@ -65,5 +67,43 @@ model Sale {
   qty        Int
   totalCents Int
   utmSource  String?  // tracking for your site
+  createdAt  DateTime @default(now())
+}
+
+model Cart {
+  id        String   @id @default(cuid())
+  sessionId String   @unique
+  itemsJson String   @default("[]") // JSON array of cart items
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Order {
+  id                    String      @id @default(cuid())
+  orderNumber           String      @unique
+  email                 String
+  name                  String
+  shippingAddressJson   String      // JSON object with address fields
+  subtotalCents         Int
+  shippingCents         Int
+  totalCents            Int
+  status                String      @default("pending") // pending|paid|fulfilled|cancelled
+  stripePaymentIntentId String?     @unique
+  items                 OrderItem[]
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+}
+
+model OrderItem {
+  id         String   @id @default(cuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  title      String   // Product title snapshot
+  size       String   // Selected size
+  finish     String   // Selected finish
+  quantity   Int
+  priceCents Int      // Price per unit at time of purchase
   createdAt  DateTime @default(now())
 }

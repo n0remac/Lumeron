@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import Image from "next/image";
+import AddToCartForm from "@/components/AddToCartForm";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -20,6 +21,7 @@ export default async function ProductPage({ params }: Props) {
       listings: {
         where: {
           status: "active",
+          channel: "site",
         },
       },
     },
@@ -33,16 +35,17 @@ export default async function ProductPage({ params }: Props) {
   const mockups = assets.filter((a) => a.kind === "mockup");
   const galleryAssets = mockups.length > 0 ? mockups : assets;
   const primaryAsset = galleryAssets[0];
-  const listing = product.listings[0];
-  const price = listing ? (listing.priceCents / 100).toFixed(2) : "0.00";
+  const imageUrl = primaryAsset?.url || "/placeholder.png";
 
-  // Parse options JSON
-  let options;
+  // Parse variants JSON
+  let variantsData: { variants?: Array<{ size: string; finish: string; priceCents: number }> };
   try {
-    options = JSON.parse(product.optionsJson);
+    variantsData = JSON.parse(product.variantsJson);
   } catch {
-    options = {};
+    variantsData = {};
   }
+
+  const variants = variantsData.variants || [];
 
   return (
     <main>
@@ -84,68 +87,31 @@ export default async function ProductPage({ params }: Props) {
           <div className="space-y-6">
             <div>
               <h1 className="text-4xl font-bold mb-2">{product.title}</h1>
-              <p className="text-3xl font-bold text-primary">${price}</p>
             </div>
 
             <div className="prose">
               <p>{product.description}</p>
             </div>
 
-            {options.sizes && (
-              <div>
-                <h3 className="font-semibold mb-2">Available Sizes</h3>
-                <div className="flex gap-2">
-                  {options.sizes.map((size: string) => (
-                    <span key={size} className="badge badge-lg">
-                      {size}"
-                    </span>
-                  ))}
-                </div>
+            {variants.length > 0 ? (
+              <AddToCartForm
+                productId={product.id}
+                slug={product.slug}
+                title={product.title}
+                imageUrl={imageUrl}
+                variants={variants}
+              />
+            ) : (
+              <div className="alert alert-warning">
+                <span>This product is not yet available for purchase.</span>
               </div>
             )}
 
-            {options.finishes && (
-              <div>
-                <h3 className="font-semibold mb-2">Finishes</h3>
-                <div className="flex gap-2">
-                  {options.finishes.map((finish: string) => (
-                    <span key={finish} className="badge badge-lg capitalize">
-                      {finish}
-                    </span>
-                  ))}
-                </div>
-              </div>
+            {product.printifyId && (
+              <p className="text-sm text-gray-500 text-center">
+                Fulfilled by Printify
+              </p>
             )}
-
-            <div className="space-y-2">
-              {listing?.channel === "etsy" && listing.externalId && (
-                <a
-                  href={`https://www.etsy.com/listing/${listing.externalId}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-primary btn-block"
-                >
-                  Buy on Etsy
-                </a>
-              )}
-
-              {listing?.channel === "amazon" && listing.externalId && (
-                <a
-                  href={`https://www.amazon.com/dp/${listing.externalId}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-primary btn-block"
-                >
-                  Buy on Amazon
-                </a>
-              )}
-
-              {product.printifyId && (
-                <p className="text-sm text-gray-500 text-center">
-                  Fulfilled by Printify
-                </p>
-              )}
-            </div>
           </div>
         </div>
       </div>

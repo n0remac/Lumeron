@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 
-type Tab = "upload" | "generate" | "listings" | "analytics";
+type Tab = "upload" | "generate" | "listings" | "analytics" | "orders";
 
 type AdminTabsProps = {
   uploadContent: React.ReactNode;
   generateContent: React.ReactNode;
   listingsContent: React.ReactNode;
   analyticsContent: React.ReactNode;
+  ordersContent: React.ReactNode;
 };
 
 export default function AdminTabs({
@@ -16,6 +17,7 @@ export default function AdminTabs({
   generateContent,
   listingsContent,
   analyticsContent,
+  ordersContent,
 }: AdminTabsProps) {
   const [activeTab, setActiveTab] = useState<Tab>("upload");
 
@@ -41,6 +43,12 @@ export default function AdminTabs({
           Listings
         </a>
         <a
+          className={`tab ${activeTab === "orders" ? "tab-active" : ""}`}
+          onClick={() => setActiveTab("orders")}
+        >
+          Orders
+        </a>
+        <a
           className={`tab ${activeTab === "analytics" ? "tab-active" : ""}`}
           onClick={() => setActiveTab("analytics")}
         >
@@ -52,6 +60,7 @@ export default function AdminTabs({
         {activeTab === "upload" && uploadContent}
         {activeTab === "generate" && generateContent}
         {activeTab === "listings" && listingsContent}
+        {activeTab === "orders" && ordersContent}
         {activeTab === "analytics" && analyticsContent}
       </div>
     </div>

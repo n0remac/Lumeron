@@ -1,21 +1,41 @@
-## Database Phase Plan
+## Database Phase Plan (Web MVP)
 
-**Phase 1 – Model Design**
-- Audit existing Prisma models to confirm how `Product`, `Listing`, and `Sale` relate to orders and saved payment methods.
-- Draft new Prisma models (`Order`, `OrderItem`, `Payment`, optional `CustomerProfile`) with fields for Stripe Payment Sheet flows: `stripePaymentIntentId`, `stripeCustomerId`, `customerSessionId`, fulfillment status, totals, and address snapshots.
-- Define supporting enums (e.g., payment status, fulfillment state, payment method type) and establish relations to the existing entities.
+**Phase 1 – Add Cart Model**
+- Add `Cart` model to store guest shopping carts
+  - `id` (cuid)
+  - `sessionId` (string, unique) - Browser session identifier
+  - `itemsJson` (string) - JSON array of cart items
+  - `createdAt`, `updatedAt` (DateTime)
 
-**Phase 2 – Migration Preparation**
-- Update `prisma/schema.prisma` with the new models and relations, keeping cascade rules consistent with current delete behavior.
-- Add required indexes on identifiers like `stripePaymentIntentId`, `stripeCustomerId`, and `orderStatus` to support Payment Sheet idempotency, saved method lookups, and admin queries.
-- Run `npm run db:generate` locally to validate the schema updates before creating migrations.
+**Phase 2 – Add Order Models**
+- Add `Order` model for completed purchases
+  - `id` (cuid)
+  - `orderNumber` (string, unique) - Human-readable ID (e.g., "LUM-20241028-001")
+  - `email` (string) - Customer email
+  - `name` (string) - Customer name
+  - `shippingAddressJson` (string) - JSON object with address
+  - `subtotalCents` (int) - Items subtotal
+  - `shippingCents` (int) - Shipping cost
+  - `totalCents` (int) - Final total
+  - `status` (string) - "pending" | "paid" | "fulfilled" | "cancelled"
+  - `stripePaymentIntentId` (string, unique, optional)
+  - `createdAt`, `updatedAt` (DateTime)
 
-**Phase 3 – Migration Execution**
-- Create a Prisma migration capturing the new tables and relations; review SQL to ensure compatibility with SQLite in development and future Postgres use.
-- Apply the migration in development and verify the new tables are created as expected.
-- Seed sample orders/payments (optional) to support local testing of checkout flows.
+- Add `OrderItem` model for line items
+  - `id` (cuid)
+  - `orderId` (string) - Relation to Order
+  - `productId` (string) - Relation to Product
+  - `title` (string) - Product title snapshot
+  - `size` (string) - Selected size
+  - `finish` (string) - Selected finish
+  - `quantity` (int)
+  - `priceCents` (int) - Price per unit at time of purchase
 
-**Phase 4 – Data Integrity & Observability**
-- Implement database helpers for transactional writes when creating PaymentIntents so orders, order items, and customer records stay consistent.
-- Add auditing fields (timestamps, webhook verification flags, last-known Payment Sheet status) to help reconcile Stripe with internal records.
-- Document rollback plan for removing the new tables if deployment must be halted.
+**Phase 3 – Update Existing Models**
+- Update `Listing` to support `channel: "site"` for direct sales
+- Add `variantsJson` field to `Product` to store size/finish/price combinations
+
+**Phase 4 – Apply Schema**
+- Update `prisma/schema.prisma` with all changes
+- Run `npm run db:push` to apply to SQLite database
+- Run `npm run db:generate` to regenerate Prisma client
